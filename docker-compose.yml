@@ -1,0 +1,23 @@
+services:
+  postgres:
+    # Local development PostgreSQL instance.
+    # Data is persisted in the named Docker volume `postgres-data`.
+    image: postgres:16
+    container_name: players-postgres
+    restart: unless-stopped
+    environment:
+      # These values match `.env.local` / `.env.example`.
+      POSTGRES_DB: players
+      POSTGRES_USER: player_admin
+      POSTGRES_PASSWORD: player_password
+    ports:
+      - "5432:5432"
+    volumes:
+      # Postgres data directory (persisted). If you run `docker compose down -v`,
+      # this volume is deleted and your DB resets.
+      - postgres-data:/var/lib/postgresql/data
+      # Initialization SQL is only run on the *first* boot of a fresh data directory.
+      - ./players.sql:/docker-entrypoint-initdb.d/players.sql:ro
+
+volumes:
+  postgres-data:
