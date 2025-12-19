@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS players (
   player_id    BIGSERIAL PRIMARY KEY,
   first_name   VARCHAR(100) NOT NULL,
   last_name    VARCHAR(100) NOT NULL,
+  dob          DATE,
   address_1    VARCHAR(255),
   address_2   VARCHAR(255),
   city        VARCHAR(255),

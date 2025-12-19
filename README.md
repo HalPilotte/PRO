@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PRO Desktop
 
-## Getting Started
+Native desktop client (Tauri + React/Vite) with a Go API and PostgreSQL backing.
 
-First, run the development server:
+## Structure
+- `players-desktop/` — Tauri frontend (React/Vite).
+- `go-api/` — Go HTTP API (`POST /api/players`) talking to Postgres.
+- `docker-compose.yml` — local Postgres.
+- `players.sql` — schema (players table).
 
+## Prereqs
+- Node 18+ and npm.
+- Rust toolchain (for Tauri).
+- Go 1.23+ (or Docker).
+- Docker (for Postgres and optional Go run).
+
+## Run Postgres
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker compose up -d
+# DB: postgres://player_admin:player_password@localhost:5432/players
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run Go API
+With Go installed:
+```bash
+cd go-api
+go run . \
+  -port 8080 \
+  # env: DATABASE_URL=postgres://player_admin:player_password@localhost:5432/players
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Or via Docker (no local Go):
+```bash
+cd go-api
+docker run --rm -p 8080:8080 -v "$PWD":/app -w /app \
+  -e DATABASE_URL='postgres://player_admin:player_password@host.docker.internal:5432/players' \
+  golang:1.23 go run .
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Run Tauri (dev)
+```bash
+cd players-desktop
+VITE_API_BASE=http://localhost:8080 npm run dev:tauri
+```
 
-## Learn More
+## Build installers
+```bash
+cd players-desktop
+VITE_API_BASE=http://localhost:8080 npm run build:tauri
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+- Player registration modal posts multipart/form-data to the Go API; DOB accepts MM-DD/MM/DD and stores ISO in Postgres.
+- Adjust `VITE_API_BASE` for LAN/cloud API endpoints.
